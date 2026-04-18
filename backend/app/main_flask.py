@@ -113,15 +113,22 @@ def init_hid():
     """Initialize HID devices."""
     global hid_mouse, hid_keyboard
     
+    import os
+    import fcntl
+    
     try:
-        hid_mouse = open(settings.hid_mouse_device, 'rb+', buffering=0)
-        logger.info(f"HID Mouse opened: {settings.hid_mouse_device}")
+        # Open in non-blocking mode
+        fd = os.open(settings.hid_mouse_device, os.O_RDWR | os.O_NONBLOCK)
+        hid_mouse = os.fdopen(fd, 'rb+', buffering=0)
+        logger.info(f"HID Mouse opened (non-blocking): {settings.hid_mouse_device}")
     except Exception as e:
         logger.error(f"Failed to open HID mouse: {e}")
     
     try:
-        hid_keyboard = open(settings.hid_keyboard_device, 'rb+', buffering=0)
-        logger.info(f"HID Keyboard opened: {settings.hid_keyboard_device}")
+        # Open in non-blocking mode
+        fd = os.open(settings.hid_keyboard_device, os.O_RDWR | os.O_NONBLOCK)
+        hid_keyboard = os.fdopen(fd, 'rb+', buffering=0)
+        logger.info(f"HID Keyboard opened (non-blocking): {settings.hid_keyboard_device}")
     except Exception as e:
         logger.error(f"Failed to open HID keyboard: {e}")
 
@@ -144,6 +151,10 @@ def send_mouse_report(buttons: int, x: int, y: int):
         hid_mouse.write(report)
         hid_mouse.flush()
         return True
+    except BlockingIOError:
+        # No USB host connected, data would block - this is OK
+        logger.debug("HID mouse write would block (no USB host connected)")
+        return True  # Return True because it's not really an error
     except Exception as e:
         logger.error(f"Failed to write mouse report: {e}")
         return False
@@ -162,6 +173,10 @@ def send_keyboard_report(modifier: int, keys: list):
         hid_keyboard.write(report)
         hid_keyboard.flush()
         return True
+    except BlockingIOError:
+        # No USB host connected, data would block - this is OK
+        logger.debug("HID keyboard write would block (no USB host connected)")
+        return True  # Return True because it's not really an error
     except Exception as e:
         logger.error(f"Failed to write keyboard report: {e}")
         return False

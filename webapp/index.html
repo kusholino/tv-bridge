@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>TV Remote</title>
+    <link rel="stylesheet" href="/styles/app.css">
+</head>
+<body>
+    <!-- Screen 1: Connect/Pair -->
+    <div id="screen-connect" class="screen active">
+        <div class="connect-container">
+            <div class="logo">
+                <h1>📺 TV Remote</h1>
+            </div>
+            
+            <div id="connection-status" class="status-indicator">
+                <div class="status-dot disconnected"></div>
+                <span class="status-text">Disconnected</span>
+            </div>
+            
+            <div id="pairing-section" class="pairing-section hidden">
+                <h2>Pairing</h2>
+                <p>Enter pairing code from your TV-Bridge:</p>
+                <input type="text" id="pairing-code-input" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric">
+                <input type="text" id="device-name-input" placeholder="Device name" value="My Phone">
+                <button id="pair-button" class="btn-primary">Pair Device</button>
+                <div id="pairing-error" class="error-message hidden"></div>
+            </div>
+            
+            <div id="reconnect-section" class="reconnect-section hidden">
+                <p>Connecting to TV-Bridge...</p>
+                <div class="spinner"></div>
+                <button id="retry-button" class="btn-secondary hidden">Retry</button>
+            </div>
+            
+            <div id="paired-info" class="paired-info hidden">
+                <p>Device: <span id="device-name-display"></span></p>
+                <button id="forget-device-button" class="btn-danger">Forget Device</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Screen 2: Remote -->
+    <div id="screen-remote" class="screen">
+        <div class="remote-header">
+            <div class="status-indicator">
+                <div id="remote-status-dot" class="status-dot"></div>
+                <span id="remote-status-text">Connected</span>
+            </div>
+            <button id="settings-button" class="icon-button">⚙️</button>
+        </div>
+        
+        <div id="touchpad" class="touchpad">
+            <div class="touchpad-hint">Touchpad</div>
+        </div>
+        
+        <div class="remote-controls">
+            <div class="button-row">
+                <button id="btn-left-click" class="control-button">L</button>
+                <button id="btn-right-click" class="control-button">R</button>
+            </div>
+            <div class="button-row">
+                <button id="btn-keyboard" class="control-button wide">⌨️ Keyboard</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Screen 3: Settings -->
+    <div id="screen-settings" class="screen">
+        <div class="settings-header">
+            <button id="back-from-settings" class="icon-button">← Back</button>
+            <h2>Settings</h2>
+        </div>
+        
+        <div class="settings-container">
+            <div class="setting-group">
+                <label for="sensitivity-slider">Pointer Sensitivity</label>
+                <input type="range" id="sensitivity-slider" min="0.1" max="5" step="0.1" value="1.0">
+                <span id="sensitivity-value">1.0</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="scroll-sensitivity-slider">Scroll Sensitivity</label>
+                <input type="range" id="scroll-sensitivity-slider" min="0.1" max="5" step="0.1" value="1.0">
+                <span id="scroll-sensitivity-value">1.0</span>
+            </div>
+            
+            <div class="setting-group">
+                <label>
+                    <input type="checkbox" id="pointer-acceleration-checkbox">
+                    Pointer Acceleration
+                </label>
+            </div>
+            
+            <div class="setting-group">
+                <label>
+                    <input type="checkbox" id="natural-scroll-checkbox">
+                    Natural Scroll
+                </label>
+            </div>
+            
+            <div class="setting-group">
+                <label>
+                    <input type="checkbox" id="tap-to-click-checkbox" checked>
+                    Tap to Click
+                </label>
+            </div>
+            
+            <div class="setting-group">
+                <button id="save-settings-button" class="btn-primary">Save Settings</button>
+            </div>
+            
+            <div class="setting-group">
+                <h3>Device Info</h3>
+                <p><strong>Device ID:</strong> <span id="device-id-display">-</span></p>
+                <p><strong>Session ID:</strong> <span id="session-id-display">-</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Keyboard Overlay -->
+    <div id="keyboard-overlay" class="keyboard-overlay hidden">
+        <div class="keyboard-header">
+            <h3>Keyboard</h3>
+            <button id="keyboard-close" class="icon-button">✕</button>
+        </div>
+        <div class="keyboard-input-container">
+            <textarea id="keyboard-textarea" placeholder="Type here..." autofocus></textarea>
+            <button id="keyboard-send" class="btn-primary">Send</button>
+        </div>
+        <div class="keyboard-special-keys">
+            <button class="special-key" data-key="Enter">Enter</button>
+            <button class="special-key" data-key="Backspace">⌫</button>
+            <button class="special-key" data-key="Escape">Esc</button>
+            <button class="special-key" data-key="ArrowUp">↑</button>
+            <button class="special-key" data-key="ArrowDown">↓</button>
+            <button class="special-key" data-key="ArrowLeft">←</button>
+            <button class="special-key" data-key="ArrowRight">→</button>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/scripts/storage.js"></script>
+    <script src="/scripts/ws-client.js"></script>
+    <script src="/scripts/touchpad.js"></script>
+    <script src="/scripts/keyboard.js"></script>
+    <script src="/scripts/pairing.js"></script>
+    <script src="/scripts/settings.js"></script>
+    <script src="/scripts/main.js"></script>
+</body>
+</html>

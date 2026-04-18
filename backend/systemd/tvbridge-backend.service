@@ -1,0 +1,46 @@
+[Unit]
+Description=TV-Bridge Backend Server
+Documentation=https://github.com/your-repo/tv-controll
+After=network-online.target tvbridge-gadget.service
+Wants=network-online.target
+Requires=tvbridge-gadget.service
+
+[Service]
+Type=exec
+User=tvbridge
+Group=tvbridge
+WorkingDirectory=/opt/tvbridge
+EnvironmentFile=-/opt/tvbridge/.env
+
+# Python mit uvicorn
+ExecStart=/opt/tvbridge/venv/bin/uvicorn \
+    backend.app.main:app \
+    --host 0.0.0.0 \
+    --port 8080 \
+    --log-level info \
+    --no-access-log
+
+# Restart-Strategie
+Restart=always
+RestartSec=5
+StartLimitInterval=600
+StartLimitBurst=5
+
+# Sicherheit
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/tvbridge /var/log/tvbridge /dev/hidg0 /dev/hidg1
+
+# Ressourcen-Limits
+MemoryLimit=256M
+CPUQuota=80%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tvbridge-backend
+
+[Install]
+WantedBy=multi-user.target

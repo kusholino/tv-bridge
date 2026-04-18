@@ -1,0 +1,16 @@
+[Unit]
+Description=TV-Bridge USB HID Gadget Setup
+Documentation=https://github.com/your-repo/tv-controll
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/setup_gadget.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=sysinit.target

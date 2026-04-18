@@ -167,7 +167,8 @@ def send_mouse_report(buttons: int, x: int, y: int):
         bytes_written = hid_mouse.write(report)
         logger.info(f"HID write: {bytes_written} bytes of {len(report)} bytes written")
         hid_mouse.flush()
-        return bytes_written > 0
+        # FileIO.write() may return None instead of bytes written
+        return bytes_written is None or bytes_written > 0
     except BlockingIOError as e:
         # No USB host connected, data would block - this is OK
         logger.info(f"HID mouse write would block: {e}")
@@ -189,9 +190,10 @@ def send_keyboard_report(modifier: int, keys: list):
     report = bytes([modifier, 0] + keys)
     
     try:
-        hid_keyboard.write(report)
+        bytes_written = hid_keyboard.write(report)
         hid_keyboard.flush()
-        return True
+        # FileIO.write() may return None instead of bytes written
+        return bytes_written is None or bytes_written > 0
     except BlockingIOError:
         # No USB host connected, data would block - this is OK
         logger.debug("HID keyboard write would block (no USB host connected)")

@@ -168,9 +168,9 @@ def send_mouse_report(buttons: int, x: int, y: int):
         logger.info(f"HID Mouse: Wrote {bytes_written}/{len(report)} bytes (buttons={buttons}, x={x}, y={y})")
         return bytes_written > 0
     except BlockingIOError as e:
-        # No USB host connected, data would block - this is OK
-        logger.debug(f"HID mouse write would block: {e}")
-        return True  # Return True because it's not really an error
+        # No USB host connected or buffer full - log as WARNING to see what's happening
+        logger.warning(f"HID mouse write blocked (USB host not ready): {e}")
+        return False  # Return False because data was NOT sent
     except Exception as e:
         logger.error(f"Failed to write mouse report: {e}")
         import traceback
@@ -192,10 +192,10 @@ def send_keyboard_report(modifier: int, keys: list):
         bytes_written = os.write(hid_keyboard_fd, report)
         logger.info(f"HID Keyboard: Wrote {bytes_written}/{len(report)} bytes")
         return bytes_written > 0
-    except BlockingIOError:
-        # No USB host connected, data would block - this is OK
-        logger.debug("HID keyboard write would block (no USB host connected)")
-        return True  # Return True because it's not really an error
+    except BlockingIOError as e:
+        # No USB host connected or buffer full - log as WARNING
+        logger.warning(f"HID keyboard write blocked (USB host not ready): {e}")
+        return False  # Return False because data was NOT sent
     except Exception as e:
         logger.error(f"Failed to write keyboard report: {e}")
         return False

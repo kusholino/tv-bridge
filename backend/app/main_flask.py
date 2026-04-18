@@ -42,6 +42,10 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 
+# Global HID file descriptors
+hid_mouse_fd = None
+hid_keyboard_fd = None
+
 # CORS Support - allow requests from any origin
 @app.after_request
 def add_cors_headers(response):
@@ -124,32 +128,27 @@ def hash_token(token: str) -> str:
 
 def init_hid():
     """Initialize HID devices."""
-    global hid_mouse, hid_keyboard
+    global hid_mouse_fd, hid_keyboard_fd
     
     import os
-    import fcntl
     
     try:
-        # Open in non-blocking mode
-        fd = os.open(settings.hid_mouse_device, os.O_RDWR | os.O_NONBLOCK)
-        hid_mouse = os.fdopen(fd, 'rb+', buffering=0)
-        logger.info(f"HID Mouse opened (non-blocking): {settings.hid_mouse_device}")
+        # Open in non-blocking mode - store FD directly for os.write()
+        hid_mouse_fd = os.open(settings.hid_mouse_device, os.O_RDWR | os.O_NONBLOCK)
+        logger.info(f"HID Mouse opened (non-blocking): {settings.hid_mouse_device}, fd={hid_mouse_fd}")
     except Exception as e:
         logger.error(f"Failed to open HID mouse: {e}")
     
     try:
-        # Open in non-blocking mode
-        fd = os.open(settings.hid_keyboard_device, os.O_RDWR | os.O_NONBLOCK)
-        hid_keyboard = os.fdopen(fd, 'rb+', buffering=0)
-        logger.info(f"HID Keyboard opened (non-blocking): {settings.hid_keyboard_device}")
+        # Open in non-blocking mode - store FD directly for os.write()
+        hid_keyboard_fd = os.open(settings.hid_keyboard_device, os.O_RDWR | os.O_NONBLOCK)
+        logger.info(f"HID Keyboard opened (non-blocking): {settings.hid_keyboard_device}, fd={hid_keyboard_fd}")
     except Exception as e:
         logger.error(f"Failed to open HID keyboard: {e}")
 
 def send_mouse_report(buttons: int, x: int, y: int):
     """Send HID mouse report (3 bytes)."""
-    logger.info(f"send_mouse_report called: buttons={buttons}, x={x}, y={y}, hid_mouse={hid_mouse}")
-    
-    if not hid_mouse:
+    if hid_mouse_fd is None:
         logger.error("HID mouse not initialized!")
         return False
     
@@ -164,14 +163,13 @@ def send_mouse_report(buttons: int, x: int, y: int):
     report = bytes([buttons, x_byte, y_byte])
     
     try:
-        bytes_written = hid_mouse.write(report)
-        logger.info(f"HID write: {bytes_written} bytes of {len(report)} bytes written")
-        hid_mouse.flush()
-        # FileIO.write() may return None instead of bytes written
-        return bytes_written is None or bytes_written > 0
+        # Use os.write() directly - returns number of bytes written
+        bytes_written = os.write(hid_mouse_fd, report)
+        logger.info(f"HID Mouse: Wrote {bytes_written}/{len(report)} bytes (buttons={buttons}, x={x}, y={y})")
+        return bytes_written > 0
     except BlockingIOError as e:
         # No USB host connected, data would block - this is OK
-        logger.info(f"HID mouse write would block: {e}")
+        logger.debug(f"HID mouse write would block: {e}")
         return True  # Return True because it's not really an error
     except Exception as e:
         logger.error(f"Failed to write mouse report: {e}")
@@ -181,7 +179,7 @@ def send_mouse_report(buttons: int, x: int, y: int):
 
 def send_keyboard_report(modifier: int, keys: list):
     """Send HID keyboard report (8 bytes)."""
-    if not hid_keyboard:
+    if hid_keyboard_fd is None:
         return False
     
     # Ensure we have exactly 6 key codes
@@ -190,10 +188,10 @@ def send_keyboard_report(modifier: int, keys: list):
     report = bytes([modifier, 0] + keys)
     
     try:
-        bytes_written = hid_keyboard.write(report)
-        hid_keyboard.flush()
-        # FileIO.write() may return None instead of bytes written
-        return bytes_written is None or bytes_written > 0
+        # Use os.write() directly on the file descriptor
+        bytes_written = os.write(hid_keyboard_fd, report)
+        logger.info(f"HID Keyboard: Wrote {bytes_written}/{len(report)} bytes")
+        return bytes_written > 0
     except BlockingIOError:
         # No USB host connected, data would block - this is OK
         logger.debug("HID keyboard write would block (no USB host connected)")

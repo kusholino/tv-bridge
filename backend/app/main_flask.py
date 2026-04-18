@@ -147,7 +147,10 @@ def init_hid():
 
 def send_mouse_report(buttons: int, x: int, y: int):
     """Send HID mouse report (3 bytes)."""
+    logger.info(f"send_mouse_report called: buttons={buttons}, x={x}, y={y}, hid_mouse={hid_mouse}")
+    
     if not hid_mouse:
+        logger.error("HID mouse not initialized!")
         return False
     
     # Clamp values

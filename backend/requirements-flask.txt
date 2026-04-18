@@ -1,0 +1,9 @@
+# Flask-basierte Requirements - Ultra-leicht!
+# Installation: ~1-2 Minuten auf Pi Zero 2 W
+
+flask==3.0.0
+aiosqlite==0.19.0
+gunicorn==21.2.0
+
+# Alles auf piwheels vorkompiliert!
+# Kein Pydantic, kein FastAPI, keine schweren Dependencies
